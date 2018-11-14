@@ -14,7 +14,7 @@ def allocate(estate, d, w=None):
         raise ValueError("d can not be empty")
     if w is None:
         w = [1] * len(d)
-    else:
+    elif not isinstance(d, list):
         raise ValueError("w must be a list!")
     if estate <= 0:
         raise ValueError("estate must be a positive integer!")
