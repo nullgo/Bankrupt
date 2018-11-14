@@ -30,6 +30,11 @@ def weighted_contested_garment(estate_w, d, w):
     :param w: weights of claims (list).
     :return: allocation vector (list).
     >>> d = [100, 300, 200]
+    >>> w = [1, 1, 1]
+    >>> weighted_contested_garment(200, d, w)
+    [50, 75, 75]
+    >>> weighted_contested_garment(800, d, w)
+    [100, 300, 200]
     >>> w = [1.2, 1, 1]
     >>> weighted_contested_garment(100, d, w)
     [27, 34, 33]
@@ -37,9 +42,14 @@ def weighted_contested_garment(estate_w, d, w):
     [50, 70, 70]
     >>> weighted_contested_garment(300, d, w)
     [50, 140, 100]
+    >>> w = [1.2, 1, 1]
+    >>> weighted_contested_garment(100, d, [1, 2, 1])
+    [33, 17, 33]
     """
     total_claim = sum(d)
     d_half = [i//2 for i in d]
+    if estate_w >= total_claim:
+        return d
     if estate_w <= total_claim/2:
         return weighted_constrained_equal_award(estate_w, d_half, w)
     else:
@@ -55,7 +65,6 @@ def weighted_constrained_equal_award(estate_w, d, w):
     :param w: weights of claims (list).
     :return: allocation vector (list).
     """
-    x = []
     n = len(d)
     dw = list(map(lambda a, b: a * b, d, w))
     # sort dw and remember orders.
@@ -64,7 +73,9 @@ def weighted_constrained_equal_award(estate_w, d, w):
     dw_index = claims[0]
     dw_sorted = claims[1]
     w_sorted = [w[dw_index[i]] for i in range(n)]
+
     # allocate
+    x = []
     __wcea(estate_w, dw_sorted, w_sorted, x)
     # give reward to the right person.
     y = [0] * n
@@ -72,7 +83,7 @@ def weighted_constrained_equal_award(estate_w, d, w):
         y[dw_index[i]] = x[i]
 
     # allocate in terms of claims and return.
-    return [round(y[i]/w_sorted[i]) for i in range(n)]
+    return [round(y[i]/w[i]) for i in range(n)]
 
 
 def __wcea(estate, dw, w, x):
