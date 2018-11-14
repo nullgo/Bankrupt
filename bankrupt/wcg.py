@@ -45,15 +45,20 @@ def weighted_contested_garment(estate_w, d, w):
     >>> w = [1.2, 1, 1]
     >>> weighted_contested_garment(100, d, [1, 2, 1])
     [33, 17, 33]
+    >>> d = [100, 100, 100]
+    >>> weighted_contested_garment(200, d, [1, 2, 1])
+    [50, 50, 50]
+    >>> weighted_contested_garment(200, d, [1, 2, 1000])
+    [50, 37, 0]
     """
-    total_claim = sum(d)
+    total_claim = sum(map(lambda a, b: a * b, d, w))
     d_half = [i//2 for i in d]
     if estate_w >= total_claim:
         return d
-    if estate_w <= total_claim/2:
+    if estate_w < total_claim/2:
         return weighted_constrained_equal_award(estate_w, d_half, w)
     else:
-        lost = weighted_contested_garment(total_claim - estate_w, d_half, w)
+        lost = weighted_constrained_equal_award(total_claim - estate_w, d_half, w)
         return [d[i]-lost[i] for i in range(len(lost))]
 
 
