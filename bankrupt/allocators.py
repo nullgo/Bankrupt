@@ -1,10 +1,11 @@
+import math
 import doctest
 
 
 def cea(estate, d):
     """ Constrained Equal Award.
 
-    :param estate: nonnegative int or float.
+    :param estate: the total quantity to be allocated (nonnegative).
     :param d: claims of the claimants (list or tuple).
     :return: allocation vector (list).
 
@@ -65,10 +66,9 @@ class __SortClaims(object):
 
 def cea_i(estate, d):
     """ Constrained Equal Award.
-    Note: input and output take integer values.
-    Round down floats if there exist.
+    Note: allocation vector takes integer values.
 
-    :param estate: nonnegative int.
+    :param estate: the total quantity to be allocated (nonnegative).
     :param d: claims of the claimants (list or tuple of integers).
     :return: allocation vector (list of integers).
 
@@ -90,14 +90,13 @@ def cea_i(estate, d):
     x = [0] * k
     if k == 0:
         return x
-    estate = int(estate)
 
     # sort d and remember the order
     sc = __SortClaims(d)
     d_sorted = sc.sort()
 
     for i in range(k):
-        di = int(d_sorted[i])
+        di = d_sorted[i]
         x[i] = di if (k-i) * di <= estate else estate // (k-i)
         x[i] = int(x[i])
         estate -= x[i]
@@ -106,74 +105,10 @@ def cea_i(estate, d):
     return sc.reorder(x)
 
 
-def wcea(estate_w, d, w):
-    """ Weighted Constrained Equal Award.
-
-    :param estate_w: weighted estate.
-    :param d: claims of the claimants (list or tuple).
-    :param w: weights of the claimants.
-    :return: allocation vector (list).
-
-    >>> d = [100, 300, 200]
-    >>> w = [1, 2, 1]
-    >>> wcea(120, d, w)
-    [40.0, 20.0, 40.0]
-    >>> wcea(330, d, w)
-    [100.0, 57.5, 115.0]
-    >>> wcea(520, d, w)
-    [100.0, 110.0, 200.0]
-    >>> wcea(800, d, w)
-    [100.0, 250.0, 200.0]
-    >>> wcea(1000, d, w)
-    [100.0, 300.0, 200.0]
-    >>> wcea(0, d, w)
-    [0.0, 0.0, 0.0]
-    >>> d = [200, 200, 200]
-    >>> wcea(300, d, w)
-    [100.0, 50.0, 100.0]
-    """
-    dw = list(map(lambda a, b: a*b, d, w))
-    xw = cea(estate_w, dw)
-    return list(map(lambda a, b: a/b, xw, w))
-
-
-def wcea_i(estate_w, d, w):
-    """ Weighted Constrained Equal Award.
-    Note: input and output take integer values.
-    Round down floats if there exist.
-
-    :param estate_w: weighted estate (nonnegative int).
-    :param d: claims of the claimants (list or tuple of integers).
-    :param w: weights of the claimants (list or tuple of integers).
-    :return: allocation vector (list of integers).
-
-    >>> d = [100, 300, 200]
-    >>> w = [1, 2, 1]
-    >>> wcea_i(121, d, w)
-    [40, 20, 40]
-    >>> wcea_i(330, d, w)
-    [100, 57, 115]
-    >>> wcea_i(521, d, w)
-    [100, 110, 200]
-    >>> wcea_i(801, d, w)
-    [100, 250, 200]
-    >>> wcea_i(1000, d, w)
-    [100, 300, 200]
-    >>> wcea_i(0, d, w)
-    [0, 0, 0]
-    >>> d = [200, 200, 200]
-    >>> wcea_i(300, d, w)
-    [100, 50, 100]
-    """
-    dw = list(map(lambda a, b: a * b, d, w))
-    xw = cea_i(estate_w, dw)
-    return list(map(lambda a, b: int(a // b), xw, w))
-
-
 def cg(estate, d):
     """ Contested Garment.
 
-    :param estate: nonnegative int or float
+    :param estate: the total quantity to be allocated (nonnegative).
     :param d: claims of the claimants (list or tuple).
     :return: allocation vector (list).
 
@@ -181,9 +116,9 @@ def cg(estate, d):
     >>> cg(102, d)
     [34.0, 34.0, 34.0]
     >>> cg(200, d)
-    [50, 75.0, 75.0]
+    [50.0, 75.0, 75.0]
     >>> cg(300, d)
-    [50, 150, 100]
+    [50.0, 150.0, 100.0]
     >>> cg(501, d)
     [67.0, 267.0, 167.0]
     >>> cg(800, d)
@@ -192,7 +127,7 @@ def cg(estate, d):
     [0.0, 0.0, 0.0]
     """
     total_claim = sum(d)
-    d_half = [i // 2 for i in d]
+    d_half = [i/2 for i in d]
     if estate >= total_claim:
         return d
     if estate < total_claim / 2:
@@ -206,7 +141,7 @@ def cg_i(estate, d):
     """ Contested Garment.
     Note: input and output take integer values.
     Round down floats if there exist.
-    :param estate: int.
+    :param estate: the total quantity to be allocated (nonnegative)..
     :param d: claims of the claimants (list or tuple of integers).
     :return: allocation vector (list of integers).
 
@@ -228,7 +163,7 @@ def cg_i(estate, d):
     """
     estate = int(estate)
     total_claim = sum(d)
-    d_half = [i // 2 for i in d]
+    d_half = [i / 2 for i in d]
     if estate >= total_claim:
         return [int(i) for i in d]
     if estate < total_claim / 2:
@@ -291,8 +226,23 @@ def wcg_i(estate_w, d, w):
     [0, 0, 0]
     """
     dw = list(map(lambda a, b: a * b, d, w))
-    xw = cg_i(estate_w, dw)
-    return list(map(lambda a, b: int(a // b), xw, w))
+    xw = cg(estate_w, dw)  # Use c instead of cg_i
+    x = list(map(lambda a, b: a/b, xw, w))
+    # The integrality is ensured as below, using "smart rounding"
+    k = len(d)
+    y = [0] * k
+    deposit = 0
+    for i in range(k):
+        withdraw = (math.ceil(x[i]) - x[i]) * w[i]
+        if 0 < withdraw <= deposit:
+            y[i] = int(math.ceil(x[i]))
+            deposit -= withdraw
+        else:
+            y[i] = int(math.floor(x[i]))
+            save = (x[i] - math.floor(x[i])) * w[i]
+            deposit += save
+    
+    return y
 
 
 def allocate(estate, d, w=None, round_down=True):
@@ -317,7 +267,7 @@ def allocate(estate, d, w=None, round_down=True):
     [50, 140, 100]
     >>> w = [1.2, 1, 1]
     >>> allocate(100, d, [1, 2, 1])
-    [33, 17, 33]
+    [33, 16, 34]
     >>> d = [100, 100, 100]
     >>> allocate(200, d, [1, 2, 1])
     [50, 50, 50]
@@ -328,10 +278,13 @@ def allocate(estate, d, w=None, round_down=True):
         raise ValueError("d must be a list!")
     if not d:
         raise ValueError("d can not be empty")
+    k = len(d)
     if w is None:
-        w = [1] * len(d)
+        w = [1] * k
     elif not isinstance(d, list):
         raise ValueError("w must be a list!")
+    if len(w) != k:
+        raise ValueError("d and w must have equal length!")
     if estate <= 0:
         raise ValueError("estate cannot be negative!")
     for di in d:
@@ -346,4 +299,3 @@ def allocate(estate, d, w=None, round_down=True):
 
 if __name__ == '__main__':
     doctest.testmod()
-
